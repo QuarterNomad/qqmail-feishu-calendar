@@ -1,0 +1,18 @@
+# 凭证文件（本地填写，不提交）
+config.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 已处理记录
+.processed_emails.json
+.processed_events.json
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
