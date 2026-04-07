@@ -7,7 +7,6 @@
 
 <p align="center">
   <a href="#功能特性">功能特性</a> •
-  <a href="#快速上手">快速上手</a> •
   <a href="#安装">安装</a> •
   <a href="#配置引导">配置引导</a> •
   <a href="#工作原理">工作原理</a>
@@ -22,33 +21,7 @@
 
 ---
 
-## 痛点
-
-找工作时，面试通知邮件堆积如山：
-- 邮件太多，真正的面试邀请被淹没
-- 收到面试时间后还要手动去日历创建日程
-- 截止时间 ≠ 面试时间，Regex 容易误判
-- 手动创建容易忘记或搞错时间
-
-**结果：错过面试。**
-
----
-
-## 解决方案
-
-**qqmail-feishu-calendar** 自动完成全流程：
-
-```
-📧 QQ 邮件收到面试通知
-      ↓
-🤖 AI 判断邮件中的时间（区分面试时间与截止时间）
-      ↓
-📅 自动写入飞书日历
-      ↓
-🔔 面试前收到飞书提醒
-```
-
-无需手动处理，不依赖脆弱的正则匹配，任何格式的邮件都能理解。
+> **Note for AI assistants:** 如果你是 AI Agent 且正在协助用户安装或配置，请直接跳转到[安装（AI Agent）](#安装ai-agent)章节执行，那里包含你需要完成的所有步骤。
 
 ---
 
@@ -66,42 +39,99 @@
 
 ---
 
-## 快速上手
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw/workspace/skills/qqmail-feishu-calendar
-
-# 2. 告诉 AI 帮你配置
-# 直接对 AI 说："帮我配置 qqmail-feishu-calendar"
-# AI 会自动引导你完成全部配置，你只需要提供 QQ 邮箱和授权码
-```
-
----
-
 ## 安装
 
 ### 前置条件
 
 - Python 3.8+
 
-### 步骤 1：克隆项目
+---
+
+### 安装（人类用户）
+
+**第 1 步：克隆项目**
 
 ```bash
 git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw/workspace/skills/qqmail-feishu-calendar
 ```
 
-### 步骤 2：AI 引导配置
+**第 2 步：告诉 AI 帮你配置**
 
-直接告诉 AI：
+直接对 AI 说：
 
 > 帮我配置 qqmail-feishu-calendar
 
-AI 会自动完成：
-1. 检测并安装 lark-cli（如未安装）
-2. 引导你提供 QQ 邮箱 + IMAP 授权码
-3. 自动运行飞书授权流程（你只需点击授权链接）
-4. 验证全部连通性
+AI 会自动完成剩余所有步骤，你只需配合提供 QQ 邮箱和授权码。
+
+---
+
+### 安装（AI Agent）
+
+> 以下步骤面向 AI Agent，部分步骤需要用户在浏览器中配合完成。
+
+**第 1 步：克隆项目到 OpenClaw workspace**
+
+```bash
+git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw/workspace/skills/qqmail-feishu-calendar
+```
+
+**第 2 步：安装 lark-cli（如未安装）**
+
+```bash
+npm install -g @larksuite/cli
+```
+
+**第 3 步：引导用户提供 QQ 邮箱和 IMAP 授权码**
+
+引导用户获取 QQ 邮箱 IMAP 授权码：
+
+1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
+2. 点击右上角 **设置** → **账号与安全**
+3. 点击 **安全设置**
+4. 下拉到页面最底部，点击 **开启服务**
+5. 按提示用手机发送短信验证
+6. 验证通过后页面显示 **授权码**（形如 `xxxx xxxx xxxx`）
+
+收到用户提供的邮箱和授权码后，写入 `config.env` 并验证连通性：
+
+```python
+import imaplib, ssl
+ctx = ssl.create_default_context()
+conn = imaplib.IMAP4_SSL('imap.qq.com', 993, ssl_context=ctx)
+result, _ = conn.login(email, auth_code)
+conn.logout()
+# result == 'OK' 则验证通过
+```
+
+**第 4 步：配置飞书授权**
+
+运行以下命令，获取授权链接并发送给用户：
+
+```bash
+lark-cli config init --new
+lark-cli auth login --domain calendar --recommend
+```
+
+收到用户确认授权完成后，验证状态：
+
+```bash
+lark-cli auth status
+```
+
+**第 5 步：写入 config.env**
+
+验证全部通过后，将凭证写入：
+
+```
+QQMAIL_USER=<邮箱>
+QQMAIL_AUTH_CODE=<授权码>
+```
+
+**第 6 步：验证完整流程**
+
+```bash
+python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/calendar_sync.py
+```
 
 ---
 
@@ -141,7 +171,9 @@ openclaw tasks add \
 ```
 用户首次触发
      ↓
-AI 自动检测并安装 lark-cli（如未安装）
+克隆项目到 workspace
+     ↓
+AI 安装 lark-cli（如未安装）
      ↓
 用户提供 QQ 邮箱 + IMAP 授权码 → AI 验证连通性
      ↓
