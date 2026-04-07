@@ -179,7 +179,10 @@ AI 安装 lark-cli（如未安装）
      ↓
 AI 运行飞书授权流程 → 生成链接 → 用户点击授权
      ↓ 配置完成
-
+AI 自动运行 calendar_sync.py 验证连通性
+     ↓
+AI 自动创建定时任务（每 6 小时）
+     ↓
 定时任务触发
      ↓
 calendar_sync.py 扫描 QQ 邮箱（IMAP）
