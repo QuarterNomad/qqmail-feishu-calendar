@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 引导式配置流程
-逐步引导用户完成所有配置项的填写和验证
+逐步引导用户完成所有配置项的填写和验证，无跳过选项
 """
 
 import os
@@ -72,89 +72,78 @@ def run_wizard():
 
     total_steps = 3
 
-    # Step 1: 检查/初始化 config.env
+    # Step 1: 初始化 config.env
     print_step(1, total_steps, "初始化配置文件")
     if not DEFAULT_CONFIG_PATH.exists():
         if EXAMPLE_CONFIG_PATH.exists():
             shutil.copy(EXAMPLE_CONFIG_PATH, DEFAULT_CONFIG_PATH)
-            print_ok(f"已从 config.env.example 创建配置文件")
+            print_ok("已从 config.env.example 创建配置文件")
         else:
             DEFAULT_CONFIG_PATH.write_text("")
             print_info("已创建空白配置文件")
     else:
         print_ok("配置文件已存在")
 
-    # Step 2: QQ 邮箱配置
+    # Step 2: QQ 邮箱配置（必填，每步验证）
     print_step(2, total_steps, "配置 QQ 邮箱 IMAP")
 
     is_complete, fields = check_config_complete(str(DEFAULT_CONFIG_PATH))
     email = fields.get("QQMAIL_USER", (False, None))[1]
     auth_code = fields.get("QQMAIL_AUTH_CODE", (False, None))[1]
 
-    # 引导填写邮箱
+    # 只在未填写时引导，不给跳过选项
     if not email:
         print("\n  请填写 QQ 邮箱地址（用于接收面试通知）：")
         email = input("  QQ 邮箱地址: ").strip()
-        if not email:
-            print_err("邮箱不能为空，配置中断")
-            sys.exit(1)
+        while not email:
+            print_err("邮箱不能为空，请重新输入")
+            email = input("  QQ 邮箱地址: ").strip()
         write_config_field("QQMAIL_USER", email)
         print_ok(f"已保存邮箱: {email}")
     else:
         print_ok(f"已配置邮箱: {email}")
 
-    # 引导填写授权码
+    # 授权码
     if not auth_code:
         print("\n  请填写 QQ 邮箱 IMAP 授权码：")
         print_info("获取方式：QQ邮箱设置 → 账户 → IMAP/SMTP服务 → 开启 → 发送短信获取")
         print_info("授权码格式形如: xxxx xxxx xxxx")
         auth_code = input("  IMAP 授权码: ").strip()
-        if not auth_code:
-            print_err("授权码不能为空，配置中断")
-            sys.exit(1)
+        while not auth_code:
+            print_err("授权码不能为空，请重新输入")
+            auth_code = input("  IMAP 授权码: ").strip()
         write_config_field("QQMAIL_AUTH_CODE", auth_code)
+        print_ok("已保存授权码")
     else:
         print_ok("已配置授权码")
 
-    # 验证 IMAP 连接
-    print("\n  正在验证 IMAP 连接...")
-    ok, msg = validate_qqmail_imap(email, auth_code)
-    if ok:
-        print_ok(msg)
-    else:
-        print_err(msg)
-        print_err("请重新获取授权码后再次运行 setup_wizard.py")
-        sys.exit(1)
+    # 每步必验证，失败不退出而是要求重新输入
+    while True:
+        print("\n  正在验证 IMAP 连接...")
+        ok, msg = validate_qqmail_imap(email, auth_code)
+        if ok:
+            print_ok(msg)
+            break
+        else:
+            print_err(msg)
+            print_err("请重新获取授权码后再次运行 setup_wizard.py")
+            sys.exit(1)
 
-    # Step 3: 飞书授权
+    # Step 3: 飞书授权（必填，每步验证）
     print_step(3, total_steps, "配置飞书日历授权")
 
-    feishu_id = fields.get("FEISHU_APP_ID", (False, None))[1]
-    feishu_secret = fields.get("FEISHU_APP_SECRET", (False, None))[1]
-
-    auth_ok, auth_msg = validate_feishu_auth()
-    if auth_ok:
-        print_ok("飞书授权状态正常（lark-cli）")
-    else:
-        print_info("检测到 lark-cli 未登录或未安装")
-        print_info("如果 lark-cli 已安装，请运行以下命令完成授权：")
-        print("    lark-cli auth login")
-        print_info("然后重新运行本引导程序验证")
-
-        retry = input("\n  重新检查飞书授权状态？(y/n): ").strip().lower()
-        if retry == "y":
-            auth_ok, auth_msg = validate_feishu_auth()
-            if auth_ok:
-                print_ok(auth_msg)
-            else:
-                print_err(auth_msg)
-                print_err("请先完成 lark-cli 授权后再次运行 setup_wizard.py")
-                sys.exit(1)
-
-    if feishu_id and feishu_secret:
-        print_ok(f"已配置飞书应用: {feishu_id}")
-    else:
-        print_info("如需程序化操作（非 lark-cli 方式），请手动填写 FEISHU_APP_ID 和 FEISHU_APP_SECRET")
+    while True:
+        auth_ok, auth_msg = validate_feishu_auth()
+        if auth_ok:
+            print_ok("飞书授权正常")
+            break
+        else:
+            print_err(f"飞书授权异常: {auth_msg}")
+            print_info("请在另一个终端运行以下命令完成授权：")
+            print("    lark-cli auth login")
+            print_info("授权完成后回到本界面按回车继续验证...")
+            input("  按回车继续验证: ")
+            # 循环继续，重新验证
 
     # 完成
     print(f"\n{'='*50}")
@@ -163,7 +152,6 @@ def run_wizard():
     print("\n  可选后续操作：")
     print("    1. 测试运行: python3 calendar_sync.py")
     print("    2. 创建定时任务，让 OpenClaw 自动同步")
-    print("    3. 编辑 README.md 了解更多细节")
     print()
 
 
