@@ -2,7 +2,25 @@
 
 将 QQ 邮箱中的面试通知邮件自动同步到飞书日历，支持 AI 智能判断时间（区分面试时间与截止时间）。
 
-**新版特性**：首次运行自动进入引导配置流程，无需手动编辑配置文件。
+## 首次使用引导
+
+当用户首次触发本 skill 时，检测到 `config.env` 不完整，会自动运行引导配置流程：
+
+```
+python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/setup_wizard.py
+```
+
+**引导流程（共 3 步，逐步验证连通性）：**
+
+| 步骤 | 内容 | 验证方式 |
+|------|------|---------|
+| 1 | 填写 QQ 邮箱地址 | 写入 config.env |
+| 2 | 填写 IMAP 授权码 | IMAP NOOP 连接测试 |
+| 3 | 检查飞书授权状态 | lark-cli auth status |
+
+**用户触发方式：**
+- 直接说"配置"、"开始使用"、"setup"
+- 或直接运行 `python3 calendar_sync.py`（检测到未配置会自动进入引导）
 
 ## 功能
 
@@ -21,27 +39,22 @@ skillhub install qqmail-feishu-calendar
 
 ## 快速开始
 
-安装后直接运行，检测到未配置时会自动进入引导流程：
+安装后直接运行，引导流程会自动启动：
 
 ```bash
 python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/calendar_sync.py
 ```
 
-按提示逐步完成：
-1. 填写 QQ 邮箱地址
-2. 填写 IMAP 授权码（自动验证连接）
-3. 检查飞书授权状态
+按提示逐步完成配置后即可使用。
 
-## 配置说明
-
-### QQ 邮箱 IMAP 授权码获取
+## QQ 邮箱 IMAP 授权码获取
 
 1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
 2. 设置 → 账户 → 向下滚动到 **IMAP/SMTP 服务**
 3. 开启 IMAP/SMTP 服务，按提示用手机发送短信验证
 4. 获得 **授权码**（形如 `xxxx xxxx xxxx xxxx`），妥善保存
 
-### 飞书授权
+## 飞书授权
 
 ```bash
 lark-cli auth login
@@ -49,7 +62,7 @@ lark-cli auth login
 
 按提示在浏览器完成授权。
 
-### 手动填写凭证（可选）
+## 手动填写凭证（可选）
 
 如不希望使用引导流程，可手动编辑配置文件：
 
@@ -98,7 +111,7 @@ calendar_sync.py 主流程
 qqmail-feishu-calendar/
 ├── calendar_sync.py        # 主脚本（含自动引导触发）
 ├── setup_wizard.py         # 引导配置流程
-├── config_validator.py      # 配置验证（IMAP / 飞书授权）
+├── config_validator.py     # 配置验证（IMAP / 飞书授权）
 ├── config.env.example      # 凭证模板
 └── SKILL.md               # 本文件
 ```
