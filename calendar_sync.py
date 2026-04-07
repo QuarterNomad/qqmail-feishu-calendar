@@ -3,12 +3,24 @@
 QQ Mail → Feishu Calendar 同步脚本（AI 判断版）
 代码粗筛 → AI 精判
 
-凭证配置：~/.openclaw/workspace/skills/qqmail-feishu-calendar/config.env
+首次运行或配置不完整时，自动进入引导流程。
 """
 
-import os, re, json, html, imaplib, email, email.header, email.utils, subprocess, ssl
+import os
+import sys
+import re
+import json
+import html
+import imaplib
+import email
+import email.header
+import email.utils
+import subprocess
+import ssl
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from config_validator import check_config_complete
 
 # ============ 凭证路径 ============
 SKILL_DIR = Path(__file__).parent
@@ -31,9 +43,26 @@ env = load_env()
 QQMAIL_USER = env.get('QQMAIL_USER', os.environ.get('QQMAIL_USER', ''))
 QQMAIL_AUTH_CODE = env.get('QQMAIL_AUTH_CODE', os.environ.get('QQMAIL_AUTH_CODE', ''))
 
+
+def ensure_config():
+    """检查配置完整性，缺失则引导配置"""
+    is_complete, _ = check_config_complete(str(CONFIG_FILE))
+    if not is_complete:
+        print("\n⚠️  检测到配置不完整，进入引导流程...\n")
+        import setup_wizard
+        setup_wizard.run_wizard()
+        # 重新加载凭证
+        global QQMAIL_USER, QQMAIL_AUTH_CODE, env
+        env = load_env()
+        QQMAIL_USER = env.get('QQMAIL_USER', '')
+        QQMAIL_AUTH_CODE = env.get('QQMAIL_AUTH_CODE', '')
+        if not QQMAIL_USER or not QQMAIL_AUTH_CODE:
+            print("❌ 引导流程未完成，无法继续")
+            sys.exit(1)
+
+
 if not QQMAIL_USER or not QQMAIL_AUTH_CODE:
-    print("❌ 凭证未配置。请编辑 config.env 填写 QQMAIL_USER 和 QQMAIL_AUTH_CODE")
-    exit(1)
+    ensure_config()
 
 # ============ IMAP ============
 def connect_imap():
@@ -147,6 +176,8 @@ def save_processed(keys):
 
 # ============ 主流程 ============
 def main():
+    ensure_config()
+
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 扫描 QQ 邮箱...")
 
     candidates = search_candidates(days=3)
