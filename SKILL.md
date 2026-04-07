@@ -17,9 +17,26 @@
 **用户触发方式：**
 直接告诉 AI "帮我配置 qqmail-feishu-calendar" 或 "开始使用 qqmail-feishu-calendar"。
 
-**注意：**
-- QQ 邮箱授权码获取方式：QQ邮箱 → 设置 → 账户 → IMAP/SMTP服务 → 开启 → 发送短信获取
-- 飞书授权：先在终端运行 `lark-cli auth login`，再告诉 AI 已完成
+## QQ 邮箱 IMAP 授权码获取（详细步骤）
+
+**注意：授权码只能通过以下步骤生成，无法从其他渠道获取。**
+
+1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
+2. 点击右上角 **设置** → **账号与安全**
+3. 点击 **安全设置**
+4. 下拉到页面最底部，点击 **开启服务**
+5. 按提示用手机发送短信验证
+6. 验证通过后，页面会显示 **授权码**（形如 `xxxx xxxx xxxx`），复制它
+
+**注意：** 授权码不是 QQ 密码，是专用于 IMAP 访问的 16 位字母。
+
+## 飞书授权
+
+```bash
+lark-cli auth login
+```
+
+按提示在浏览器完成授权。
 
 ## 功能
 
@@ -39,21 +56,6 @@ git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw
 ## 快速开始
 
 安装后直接告诉 AI "帮我配置 qqmail-feishu-calendar"，按提示在对话中填写 QQ 邮箱和授权码即可。
-
-## QQ 邮箱 IMAP 授权码获取
-
-1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
-2. 设置 → 账户 → 向下滚动到 **IMAP/SMTP 服务**
-3. 开启 IMAP/SMTP 服务，按提示用手机发送短信验证
-4. 获得 **授权码**（形如 `xxxx xxxx xxxx xxxx`），妥善保存
-
-## 飞书授权
-
-```bash
-lark-cli auth login
-```
-
-按提示在浏览器完成授权。
 
 ## 创建定时任务
 
