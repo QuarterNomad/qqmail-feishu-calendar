@@ -6,20 +6,34 @@
 
 当用户首次触发本 skill 时，直接在对话中引导用户填写配置，无需手动运行脚本。
 
-**引导流程（共 3 步，全部在对话中完成）：**
+**引导流程（共 4 步，全部在对话中完成）：**
 
 | 步骤 | 内容 | 验证方式 |
 |------|------|---------|
-| 1 | 提供 QQ 邮箱地址 | AI 写入 config.env |
-| 2 | 提供 IMAP 授权码 | AI 调用 IMAP NOOP 连接测试 |
-| 3 | 检查飞书授权状态 | 调用 lark-cli auth status |
+| 1 | 安装 lark-cli | 检查 lark-cli 是否可用 |
+| 2 | 提供 QQ 邮箱地址 | AI 写入 config.env |
+| 3 | 提供 IMAP 授权码 | AI 调用 IMAP NOOP 连接测试 |
+| 4 | 飞书授权 | 调用 lark-cli auth login + 状态验证 |
 
 **用户触发方式：**
 直接告诉 AI "帮我配置 qqmail-feishu-calendar" 或 "开始使用 qqmail-feishu-calendar"。
 
-## QQ 邮箱 IMAP 授权码获取（详细步骤）
+## 前置要求
 
-**注意：授权码只能通过以下步骤生成，无法从其他渠道获取。**
+### 1. 安装 lark-cli（飞书 CLI 工具）
+
+```bash
+npm install -g @larksuite/cli
+```
+
+验证安装成功：
+```bash
+lark-cli --version
+```
+
+### 2. QQ 邮箱 IMAP 授权码获取
+
+**详细步骤：**
 
 1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
 2. 点击右上角 **设置** → **账号与安全**
@@ -28,9 +42,9 @@
 5. 按提示用手机发送短信验证
 6. 验证通过后，页面会显示 **授权码**（形如 `xxxx xxxx xxxx`），复制它
 
-**注意：** 授权码不是 QQ 密码，是专用于 IMAP 访问的 16 位字母。
+**注意：** 授权码不是 QQ 密码，是专用于 IMAP 访问的 16 位字母，只能通过以上步骤在网页获取。
 
-## 飞书授权
+### 3. 飞书授权
 
 ```bash
 lark-cli auth login
@@ -55,7 +69,7 @@ git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw
 
 ## 快速开始
 
-安装后直接告诉 AI "帮我配置 qqmail-feishu-calendar"，按提示在对话中填写 QQ 邮箱和授权码即可。
+安装后直接告诉 AI "帮我配置 qqmail-feishu-calendar"，按提示在对话中完成配置即可。
 
 ## 创建定时任务
 
@@ -73,9 +87,10 @@ openclaw tasks add \
 用户首次触发
      ↓
 AI 在对话中引导填写配置
-  ① QQ 邮箱地址 → IMAP 验证
-  ② IMAP 授权码 → 连接测试
-  ③ 飞书授权状态检查
+  ① 安装 lark-cli（如未安装）
+  ② QQ 邮箱地址 → IMAP 验证
+  ③ IMAP 授权码 → 连接测试
+  ④ 飞书授权 → lark-cli auth login
      ↓ 配置完成
 calendar_sync.py 主流程
   ① 连接 QQ 邮箱 IMAP，搜索面试邮件
@@ -95,6 +110,9 @@ qqmail-feishu-calendar/
 ```
 
 ## 常见问题
+
+**Q: 提示"lark-cli 未找到"？**  
+A: 运行 `npm install -g @larksuite/cli` 安装。
 
 **Q: 提示"IMAP 连接失败"？**  
 A: 授权码可能已过期，请到 QQ 邮箱重新获取。
