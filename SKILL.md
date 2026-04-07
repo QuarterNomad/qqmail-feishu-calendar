@@ -4,23 +4,22 @@
 
 ## 首次使用引导
 
-当用户首次触发本 skill 时，检测到 `config.env` 不完整，会自动运行引导配置流程：
+当用户首次触发本 skill 时，直接在对话中引导用户填写配置，无需手动运行脚本。
 
-```
-python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/setup_wizard.py
-```
-
-**引导流程（共 3 步，逐步验证连通性）：**
+**引导流程（共 3 步，全部在对话中完成）：**
 
 | 步骤 | 内容 | 验证方式 |
 |------|------|---------|
-| 1 | 填写 QQ 邮箱地址 | 写入 config.env |
-| 2 | 填写 IMAP 授权码 | IMAP NOOP 连接测试 |
-| 3 | 检查飞书授权状态 | lark-cli auth status |
+| 1 | 提供 QQ 邮箱地址 | AI 写入 config.env |
+| 2 | 提供 IMAP 授权码 | AI 调用 IMAP NOOP 连接测试 |
+| 3 | 检查飞书授权状态 | 调用 lark-cli auth status |
 
 **用户触发方式：**
-- 直接说"配置"、"开始使用"、"setup"
-- 或直接运行 `python3 calendar_sync.py`（检测到未配置会自动进入引导）
+直接告诉 AI "帮我配置 qqmail-feishu-calendar" 或 "开始使用 qqmail-feishu-calendar"。
+
+**注意：**
+- QQ 邮箱授权码获取方式：QQ邮箱 → 设置 → 账户 → IMAP/SMTP服务 → 开启 → 发送短信获取
+- 飞书授权：先在终端运行 `lark-cli auth login`，再告诉 AI 已完成
 
 ## 功能
 
@@ -29,23 +28,17 @@ python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/setup_wizard.py
 - 📅 写入飞书日历，附 QQ 邮件原始链接
 - ⏰ 每 6 小时自动运行（可通过 cron 调整）
 - 🔄 智能查重，同一公司同一时间不重复创建
-- 🧙 **首次运行自动引导配置**，逐步验证连通性
+- 🧙 **对话式引导配置**，逐步验证连通性
 
 ## 安装
 
 ```bash
-skillhub install qqmail-feishu-calendar
+git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw/workspace/skills/qqmail-feishu-calendar
 ```
 
 ## 快速开始
 
-安装后直接运行，引导流程会自动启动：
-
-```bash
-python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/calendar_sync.py
-```
-
-按提示逐步完成配置后即可使用。
+安装后直接告诉 AI "帮我配置 qqmail-feishu-calendar"，按提示在对话中填写 QQ 邮箱和授权码即可。
 
 ## QQ 邮箱 IMAP 授权码获取
 
@@ -62,21 +55,6 @@ lark-cli auth login
 
 按提示在浏览器完成授权。
 
-## 手动填写凭证（可选）
-
-如不希望使用引导流程，可手动编辑配置文件：
-
-```bash
-nano ~/.openclaw/workspace/skills/qqmail-feishu-calendar/config.env
-```
-
-```env
-QQMAIL_USER=your_email@qq.com
-QQMAIL_AUTH_CODE=your_imap_auth_code
-FEISHU_APP_ID=cli_xxxxxxxxxxxxxx
-FEISHU_APP_SECRET=your_app_secret
-```
-
 ## 创建定时任务
 
 ```bash
@@ -92,13 +70,11 @@ openclaw tasks add \
 ```
 用户首次触发
      ↓
-检测 config.env → 不完整？
-     ↓ 是
-进入 setup_wizard.py 引导流程
-  ① 填写 QQ 邮箱 → IMAP NOOP 验证
-  ② 填写授权码 → IMAP 连接测试
-  ③ 检查飞书 lark-cli 授权状态
-     ↓ 否（已配置完整）
+AI 在对话中引导填写配置
+  ① QQ 邮箱地址 → IMAP 验证
+  ② IMAP 授权码 → 连接测试
+  ③ 飞书授权状态检查
+     ↓ 配置完成
 calendar_sync.py 主流程
   ① 连接 QQ 邮箱 IMAP，搜索面试邮件
   ② AI 判断是否为面试通知（区分截止时间）
@@ -109,17 +85,14 @@ calendar_sync.py 主流程
 
 ```
 qqmail-feishu-calendar/
-├── calendar_sync.py        # 主脚本（含自动引导触发）
-├── setup_wizard.py         # 引导配置流程
+├── calendar_sync.py        # 主脚本
+├── setup_wizard.py         # 脚本式引导（非对话场景备用）
 ├── config_validator.py     # 配置验证（IMAP / 飞书授权）
 ├── config.env.example      # 凭证模板
 └── SKILL.md               # 本文件
 ```
 
 ## 常见问题
-
-**Q: 引导流程中途退出，想重新开始？**  
-A: 删除 `config.env` 后重新运行 `calendar_sync.py` 即可。
 
 **Q: 提示"IMAP 连接失败"？**  
 A: 授权码可能已过期，请到 QQ 邮箱重新获取。
