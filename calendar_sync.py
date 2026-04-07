@@ -125,14 +125,15 @@ def get_email_body(msg):
     return text[:5000].strip()
 
 # ============ 搜索候选邮件 ============
-def search_candidates(days=3):
+def search_candidates(hours=12):
     conn = connect_imap()
     try:
         conn.select('INBOX', readonly=True)
         keywords = ['面试通知', '面试邀约', '面试安排']
         results = []
         for kw in keywords:
-            date_imap = (datetime.now() - timedelta(days=days)).strftime('%d-%b-%Y')
+            since_datetime = datetime.now() - timedelta(hours=hours)
+            date_imap = since_datetime.strftime('%d-%b-%Y')
             criteria_args = ['SUBJECT', kw.encode('utf-8'), 'SINCE', date_imap.encode('utf-8')]
             status, messages = conn.search('UTF-8', *criteria_args)
             if status != 'OK': continue
@@ -180,7 +181,7 @@ def main():
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 扫描 QQ 邮箱...")
 
-    candidates = search_candidates(days=3)
+    candidates = search_candidates(hours=12)
     print(f"  找到 {len(candidates)} 封候选邮件")
 
     if not candidates:
