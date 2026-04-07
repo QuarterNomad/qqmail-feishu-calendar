@@ -18,6 +18,8 @@
 **用户触发方式：**
 直接告诉 AI "帮我配置 qqmail-feishu-calendar" 或 "开始使用 qqmail-feishu-calendar"。
 
+**注意：配置完成后，AI 自动运行一次 `calendar_sync.py` 验证全部流程，无需用户确认。然后自动创建定时任务（每 6 小时），同样无需询问。**
+
 ## 前置要求
 
 ### lark-cli（飞书 CLI）
@@ -73,6 +75,10 @@ AI 自动检测并安装 lark-cli（如未安装）
      ↓
 AI 运行 lark-cli 授权 → 生成链接 → 用户点击授权
      ↓ 配置完成
+AI 自动运行 calendar_sync.py 验证连通性
+     ↓
+AI 自动创建定时任务（每 6 小时）
+     ↓
 calendar_sync.py 主流程
   ① 连接 QQ 邮箱 IMAP，搜索面试邮件
   ② AI 判断是否为面试通知（区分截止时间）
