@@ -1,10 +1,6 @@
 # qqmail-feishu-calendar
 
 <p align="center">
-  <img src="./assets/banner.svg" alt="qqmail-feishu-calendar" width="100%">
-</p>
-
-<p align="center">
   <strong>Never miss an interview again.</strong><br>
   <sub>将 QQ 邮箱中的面试通知自动同步到飞书日历，AI 智能判断时间</sub>
 </p>
@@ -181,9 +177,7 @@ qqmail-feishu-calendar/
 ├── config_validator.py     # 配置验证（IMAP / 飞书授权）
 ├── config.env.example      # 凭证模板
 ├── SKILL.md               # OpenClaw Skill 定义（AI 引导流程）
-├── README.md              # 本文件
-└── assets/
-    └── banner.svg         # 项目 Banner
+└── README.md              # 本文件
 ```
 
 ---
