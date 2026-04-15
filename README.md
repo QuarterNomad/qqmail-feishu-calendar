@@ -1,180 +1,127 @@
 # qqmail-feishu-calendar
 
-<p align="center">
-  <strong>Never miss an interview again.</strong><br>
-  <sub>将 QQ 邮箱中的面试通知自动同步到飞书日历，AI 智能判断时间</sub>
-</p>
+将 QQ 邮箱中的面试通知类邮件扫描出来，供后续人工处理或二次集成使用。
 
-<p align="center">
-  <a href="#功能特性">功能特性</a> •
-  <a href="#安装">安装</a> •
-  <a href="#配置指南">配置指南</a> •
-  <a href="#定时任务">定时任务</a> •
-  <a href="#工作原理">工作原理</a>
-</p>
+> 当前仓库里的实现以 **邮件扫描与配置校验** 为主，尚未真正创建飞书日历事件，也没有接入大模型做时间解析。
 
-<p align="center">
-  <img src="https://img.shields.io/badge/OpenClaw-Skill-0f172a?style=flat-square" alt="OpenClaw Skill">
-  <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square" alt="Python 3.8+">
-  <img src="https://img.shields.io/badge/Platform-Linux%2FmacOS-000000?style=flat-square" alt="Platform">
-  <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" alt="MIT License">
-</p>
+## 当前能力
 
----
+- 扫描 QQ 邮箱近 12 小时内、主题包含以下关键词的邮件：
+  - `面试通知`
+  - `面试邀约`
+  - `面试安排`
+- 输出候选邮件的时间、发件人、QQ 邮件链接、正文摘要
+- 使用 `.processed_emails.json` 按 **邮件标题** 记录已处理邮件，避免重复输出
+- 提供 `setup_wizard.py` 进行交互式配置
+- 提供 `config_validator.py` 进行配置完整性、QQ 邮箱 IMAP、飞书登录状态检查
 
-## 功能特性
+## 当前不包含的能力
 
-|     | 功能 | 说明 |
-|:---:|------|------|
-| 🤖 | **AI 判断时间** | 智能区分"面试时间"与"截止时间"，不误判 |
-| 🔍 | **多关键词扫描** | 覆盖面试通知、邀约、安排等多类邮件 |
-| ⏰ | **定时同步** | 每 6 小时自动运行（可自定义频率） |
-| 🔄 | **智能查重** | 同一公司同一时间不重复创建 |
-| 🔗 | **邮件直达** | 日历事件中直接附加 QQ 邮件原始链接 |
-| 🌐 | **跨平台** | Linux / macOS 均可运行 |
+以下能力目前仍未在代码中实现：
 
----
+- AI 判断邮件中的面试时间
+- 区分面试时间与截止时间
+- 自动创建飞书日历事件
+- 基于“公司 + 时间”的事件级查重
 
-## 安装
+如果后续要支持这些能力，需要继续扩展 `calendar_sync.py` 的解析与日历写入逻辑。
 
-### 前置条件
+## 运行环境
 
 - Python 3.8+
+- macOS 或 Linux
+- `lark-cli`（仅用于检查飞书登录状态）
 
-### 步骤
-
-**第 1 步：克隆项目**
-
-```bash
-git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git ~/.openclaw/workspace/skills/qqmail-feishu-calendar
-```
-
-**第 2 步：安装 lark-cli**
+安装 `lark-cli`：
 
 ```bash
 npm install -g @larksuite/cli
 ```
 
-**第 3 步：配置凭证**
+## 配置
 
-详见[配置指南](#配置指南)。
-
-**第 4 步：验证安装**
-
-```bash
-python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/calendar_sync.py
-```
-
----
-
-## 配置指南
-
-### QQ 邮箱 IMAP 授权码
+### 1. 获取 QQ 邮箱 IMAP 授权码
 
 1. 打开 [mail.qq.com](https://mail.qq.com) 并登录
 2. 点击右上角 **设置** → **账号与安全**
 3. 点击 **安全设置**
-4. 下拉到页面最底部，点击 **开启服务**
-5. 按提示用手机发送短信验证
-6. 验证通过后页面显示 **授权码**（形如 `xxxx xxxx xxxx`）
+4. 下拉到页面底部，开启 IMAP 服务
+5. 按提示完成短信验证
+6. 获取授权码（形如 `xxxx xxxx xxxx`）
 
-### 飞书授权
+### 2. 登录飞书（可选但脚本会检查状态）
 
 ```bash
-lark-cli config init --new
-lark-cli auth login --domain calendar --recommend
+lark-cli auth login
 ```
 
-### 写入配置
+### 3. 写入配置文件
 
-将凭证写入 `config.env`：
+在项目根目录创建 `config.env`，内容如下：
 
-```
+```env
 QQMAIL_USER=<你的QQ邮箱>
 QQMAIL_AUTH_CODE=<IMAP授权码>
 ```
 
-### 交互式配置（可选）
-
-如需交互式引导，可在终端运行：
+也可以从模板复制：
 
 ```bash
-python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/setup_wizard.py
+cp config.env.example config.env
 ```
 
----
+### 4. 交互式配置（可选）
 
-## 定时任务
-
-创建 OpenClaw cron job（每 6 小时）：
+如果希望一步步引导填写并校验配置：
 
 ```bash
-openclaw tasks add \
-  --name "QQ邮箱面试通知→飞书日历" \
-  --cron "0 */6 * * *" \
-  --timezone "Asia/Shanghai" \
-  --message "python3 ~/.openclaw/workspace/skills/qqmail-feishu-calendar/calendar_sync.py"
+python3 setup_wizard.py
 ```
 
----
+## 使用方式
 
-## 工作原理
+### 手动运行扫描
 
-```
-calendar_sync.py 扫描 QQ 邮箱（IMAP）
-     ↓
-AI 判断是否为面试通知（区分面试时间与截止时间）
-     ↓
-写入飞书日历，附 QQ 邮件直达链接
+```bash
+python3 calendar_sync.py
 ```
 
-### 为什么用 AI 而不是正则？
+运行后脚本会：
 
-| 正则匹配 | AI 判断 |
-|----------|---------|
-| 遇到新格式就失效 | 理解任意格式的邮件 |
-| 无法区分截止时间与面试时间 | 真正理解语义 |
-| 每个公司需要单独规则 | 通用所有发件方 |
-| 需要人工维护 | 零维护 |
+1. 检查 `config.env` 是否完整
+2. 配置缺失时自动进入 `setup_wizard.py`
+3. 连接 QQ 邮箱 IMAP
+4. 搜索近 12 小时的候选邮件
+5. 输出新邮件摘要并记录到 `.processed_emails.json`
 
----
+### 定时运行示例
+
+如果你希望定时扫描，可以自行用 cron 或其他任务系统包装，例如每 6 小时执行一次：
+
+```bash
+0 */6 * * * cd /path/to/qqmail-feishu-calendar && python3 calendar_sync.py
+```
 
 ## 项目结构
 
-```
+```text
 qqmail-feishu-calendar/
-├── calendar_sync.py        # 主脚本（扫描 + AI 解析）
+├── calendar_sync.py        # 主脚本：扫描候选邮件并输出结果
 ├── setup_wizard.py         # 交互式配置引导
-├── config_validator.py     # 配置验证
-├── config.env.example      # 凭证模板
-├── SKILL.md               # OpenClaw Skill 定义
-└── README.md              # 本文件
+├── config_validator.py     # 配置与连通性检查
+├── config.env.example      # 配置模板
+├── SKILL.md                # 面向 agent 的 skill 执行规范
+├── README.md               # 面向人类用户的项目说明
+└── .processed_emails.json  # 已处理邮件标题记录（运行后生成）
 ```
 
----
+## 已知限制
 
-## 常见问题
-
-**Q: AI 提示"IMAP 连接失败"？**  
-A: 授权码可能已过期，请到 QQ 邮箱重新获取新的授权码。
-
-**Q: 飞书授权链接打不开？**  
-A: 确保在浏览器中已登录对应飞书账号。
-
-**Q: 如何修改扫描频率？**  
-A: 编辑 cron 表达式 `"0 */6 * * *"`，如改为每小时一次：`"0 * * * *"`。
-
-**Q: 支持除 QQ 邮箱以外的其他邮箱吗？**  
-A: 目前仅支持 QQ 邮箱。理论上可扩展，欢迎 PR。
-
----
+- 目前只支持 QQ 邮箱 IMAP
+- 关键词筛选依赖邮件主题，不会理解正文语义
+- 已处理记录只按邮件标题去重，标题相同可能被视为同一封邮件
+- 虽然会检查飞书登录状态，但当前脚本不会真正写入飞书日历
 
 ## License
 
 [MIT License](./LICENSE)
-
----
-
-<p align="center">
-  Made with ❤️ for job seekers
-</p>
