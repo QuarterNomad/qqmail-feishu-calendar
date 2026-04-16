@@ -1,20 +1,77 @@
 # qqmail-lark-calendar
 
-这是一个只保留 standalone skill/runtime 的仓库。
+这是一个面向 OpenClaw / agent 调用的一次性执行 skill 仓库，也已经补齐了从 GitHub 分发到 OpenClaw workspace 的基础包装层。
 
 它负责：
 - 扫描 QQ 邮箱中的面试通知类邮件
-- 提取最低配面试信息
+- 基于当前最小规则提取面试信息
 - 通过 `lark-cli` 创建或更新 Lark 日历事件
-- 持久化本地状态以支持重复运行
+- 持久化本地状态以支持重复调用
+- 在日历描述中补充对应 QQ 邮件链接
 
-这个仓库**不再包含**交互式配置引导、安装教学或 onboarding 资产。运行所需的配置文件、环境变量、认证状态与调度方式，应由外部宿主系统提供。
+这个仓库不负责托管凭证、自动登录 Lark 或交互式 onboarding；这些前置条件仍需由 OpenClaw 宿主环境或最终用户自行提供。
 
-## 保留内容
+## 安装到 OpenClaw
 
-- `calendar_sync.py`：runtime 入口脚本
-- `qqmail_lark_calendar/`：核心逻辑包
-- `SKILL.md`：面向 agent 的 skill 契约
+### 方式一：一键安装
+
+```bash
+curl -sSL https://raw.githubusercontent.com/zhanzhifan/qqmail-feishu-calendar/main/install.sh | bash
+```
+
+### 方式二：手动安装
+
+```bash
+git clone https://github.com/zhanzhifan/qqmail-feishu-calendar.git
+cd qqmail-feishu-calendar
+./install.sh
+```
+
+安装脚本会把仓库放到：
+
+```bash
+~/.openclaw/workspace/skills/qqmail-lark-calendar
+```
+
+如果该目录已经存在 git 仓库，脚本会执行更新；如果缺少 `config.env`，会基于 `config.env.example` 创建模板文件。
+
+## 安装后需要做的事
+
+1. 编辑 `~/.openclaw/workspace/skills/qqmail-lark-calendar/config.env`
+2. 填写：
+   - `QQMAIL_USER`
+   - `QQMAIL_AUTH_CODE`
+   - `LARK_CALENDAR_ID`
+3. 执行：
+
+```bash
+lark-cli auth login
+```
+
+## 手动验证
+
+```bash
+python3 ~/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hours 12
+```
+
+如果配置缺失，脚本会提示缺少哪些变量；如果 Lark 未登录，会直接报鉴权失败。
+
+## 适用场景
+
+当用户在 OpenClaw 或其他上层智能体里表达类似意图时，应调用这个 skill：
+
+- 根据面试邮件安排飞书日历
+- 扫描最近的面试通知并同步到 Lark 日历
+- 把 QQ 邮箱里的面试邀约写到飞书日历
+
+## OpenClaw 分发文件
+
+仓库根目录新增了用于 GitHub / OpenClaw 分发的包装文件：
+
+- `skill.json`：用于描述 skill 的基本元信息
+- `agents/openai.yaml`：用于声明展示名、简介和默认 prompt
+- `install.sh`：用于把仓库安装到 `~/.openclaw/workspace/skills/qqmail-lark-calendar`
+- `config.env.example`：用于生成本地 `config.env` 模板
 
 ## 运行时约束
 
@@ -35,13 +92,21 @@
 python3 calendar_sync.py --hours 12
 ```
 
+上面的命令可作为本地/脚本包装方式；但这个仓库的主定位是被上层智能体按意图触发的一次性 skill，而不是以 cron 为中心的仓库。
+
 ## 项目结构
 
 ```text
 qqmail-lark-calendar/
-├── calendar_sync.py          # 入口脚本：参数解析 + 调度
+├── agents/
+│   └── openai.yaml           # OpenClaw / agent 接口元数据
+├── calendar_sync.py          # 一次性执行入口：CLI 包装 + skill 可复用主流程
+├── config.env.example        # OpenClaw 安装后复制为 config.env 的模板
+├── install.sh                # GitHub → OpenClaw workspace 安装脚本
 ├── qqmail_lark_calendar/     # 核心逻辑包（配置 / IMAP / 解析 / Lark / 状态）
-├── SKILL.md                  # skill 执行契约
+├── skill.json                # skill 元信息 manifest
+├── SKILL.md                  # skill 调用契约
+├── CLAUDE.md                 # Claude Code 协作说明
 ├── README.md                 # 仓库级简述
 ├── .processed_emails.json    # 邮件处理状态（运行后生成）
 └── .processed_events.json    # 日历事件状态（运行后生成）
@@ -51,7 +116,7 @@ qqmail-lark-calendar/
 
 当前实现仍然不包含：
 
-- 交互式初始化
-- 配置引导
+- 自动填充或托管敏感凭证
+- 自动完成 `lark-cli` 登录
 - AI 语义理解级时间解析
-- 完整的 onboarding 文档
+- 完整的 onboarding 教学流程

@@ -1,74 +1,108 @@
 ---
 name: qqmail-lark-calendar
-description: standalone skill/runtime。扫描 QQ 邮箱面试通知邮件，提取关键信息并通过 lark-cli 写入 Lark 日历，支持幂等去重与非交互运行。用于“同步/扫描 QQ 邮箱面试通知到 Lark 日历”等场景；不用于 onboarding、交互式初始化或实现讲解。
+description: Conversational one-shot skill that scans QQ Mail interview-notification emails and creates or updates Lark calendar events via lark-cli.
 ---
 
 # qqmail-lark-calendar
 
-## 适用场景（触发词）
-- 用户要求“同步/扫描/检查 QQ 邮箱里的面试通知”
-- 用户要求“把面试邮件写到 Lark 日历”
-- 用户希望运行一次该 skill，或把它接入外部调度系统
+## Purpose
 
-## 不适用场景
-- 需要交互式配置引导
-- 需要安装教学或 onboarding
-- 只讨论原理、结构或代码实现
-- 用户要求 AI 级语义理解、精准区分截止时间与面试时间
+When the user asks to arrange Lark calendar events from interview emails, run one bounded sync from QQ Mail to Lark Calendar.
 
-## 前置条件
-该 skill 只接受非交互运行。外部宿主系统必须提前提供：
+## When to use
+
+Use this skill when the user wants to:
+- 根据面试邮件安排飞书日历
+- 扫描最近的面试通知并同步到 Lark 日历
+- 把 QQ 邮箱里的面试邀约写到飞书日历
+
+## When not to use
+
+Do not use this skill when the user wants:
+- interactive configuration or setup guidance
+- installation or onboarding instructions
+- codebase explanation, architecture discussion, or implementation walkthroughs
+- AI-level semantic understanding of mail content, including precise distinction between interview time and deadline time
+
+## Required inputs and dependencies
+
+The host environment must already provide:
 
 - `python3`
 - `lark-cli`
-- 已可用的 QQ 邮箱 IMAP 凭证
-- 已登录的 Lark CLI 会话
-- 完整配置：
+- valid QQ Mail IMAP credentials
+- an authenticated Lark CLI session
+- complete runtime configuration via `config.env` and/or process environment:
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
   - `LARK_CALENDAR_ID`
 
-## 执行命令
+## Invocation shape
+
+This is a one-shot execution skill.
+
+Default behavior:
+- scan recent candidate emails within the default lookback window
+- skip subjects already recorded in `{baseDir}/.processed_emails.json`
+- extract minimal interview information from each new candidate email
+- create or patch the matching Lark calendar event
+- append the QQ mail link into the final event description
+- persist updated local state
+- return a readable summary to the caller
+
+Optional user intent may narrow the time window, for example “最近 24 小时”.
+
+## Command wrapper
+
 ```bash
 python3 "{baseDir}/calendar_sync.py" --hours 12
 ```
 
-## 执行行为
-一次运行应完成：
-- 扫描 QQ 邮箱 IMAP 中近 `--hours` 小时的候选邮件
-- 对新邮件提取最低配面试信息
-- 幂等写入 Lark 日历：已存在则更新，否则创建
-- 更新状态文件：
-  - `{baseDir}/.processed_emails.json`
-  - `{baseDir}/.processed_events.json`
+This command is the canonical local wrapper around the same one-shot execution path. GitHub/OpenClaw installation is handled by `install.sh`; this file only defines when the skill should run and what it should do.
 
-## 输出与退出码
-- **退出码 0**：执行成功（包括“无候选邮件”）
-- **退出码 2**：配置缺失或不完整
-- **退出码 3**：Lark CLI 不可用、未登录或权限不足
-- **退出码 4**：QQ 邮箱 IMAP 失败
-- **退出码 5**：写入 Lark 日历失败
-- **退出码 1**：其他未分类异常
+## Expected result summary
 
-成功输出应包含：
-- 扫描窗口
-- 候选邮件数
-- 创建事件数
-- 更新事件数
-- 失败数
+A successful run should be able to report:
+- scan window
+- candidate email count
+- new email count
+- created event count
+- updated event count
+- failure count
 
-失败输出应包含：
-- 失败阶段
-- 关键错误信息
+If the skill cannot run, the failure should clearly identify the stage, such as:
+- missing configuration
+- Lark authentication unavailable
+- QQ Mail IMAP access failed
+- state load/save failed
+- Lark calendar write failed
 
-## 输出边界
-本 skill 当前不会：
-- 提供交互式初始化
-- 自动生成配置文件
-- 提供安装/登录教学
-- 做 AI 级正文语义解析
+## Parsing and idempotency constraints
 
-## 相关文件
+This skill currently uses minimal rule-based extraction, not AI semantic parsing.
+
+- If a clear date and time range is found, the event uses that range.
+- If no clear time range is found, the runtime falls back to the email timestamp and creates a 30-minute placeholder event.
+- Processed-email dedupe is subject-based.
+- Event upsert behavior depends on the local `dedupe_key -> event_id` mapping; it does not search Lark remotely for matching events.
+
+## Side effects
+
+A run may:
+- read emails from QQ Mail IMAP
+- create or update events in the configured Lark calendar
+- write local state files under `{baseDir}`
+
+## Hard boundaries
+
+This skill must not:
+- provide interactive initialization
+- generate credentials automatically
+- teach installation or login flows
+- claim AI-level semantic understanding of email content
+
+## Related runtime files
+
 - `{baseDir}/calendar_sync.py`
 - `{baseDir}/qqmail_lark_calendar/config.py`
 - `{baseDir}/qqmail_lark_calendar/mail_imap.py`

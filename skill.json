@@ -1,0 +1,5 @@
+{
+  "name": "qqmail-lark-calendar",
+  "description": "Conversational one-shot skill that scans QQ Mail interview-notification emails and creates or updates Lark calendar events via lark-cli.",
+  "version": "0.1.0"
+}

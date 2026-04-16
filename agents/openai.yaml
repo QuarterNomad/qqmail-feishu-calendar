@@ -1,0 +1,4 @@
+interface:
+  display_name: "QQMail Lark Calendar"
+  short_description: "Sync interview-notification emails from QQ Mail to Lark Calendar"
+  default_prompt: "根据面试邮件安排飞书日历"
