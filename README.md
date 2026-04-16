@@ -39,7 +39,8 @@ curl -sSL https://raw.githubusercontent.com/QuarterNomad/qqmail-feishu-calendar/
 
 运行这个 skill 前，外部环境需要已经提供 `lark-cli`。如果安装脚本检测不到它，只会提示你查看官方仓库：
 
-- https://github.com/larksuite/cli
+- 飞书 / Lark CLI：https://github.com/larksuite/cli
+- QQ 邮箱 IMAP / 授权码说明：https://service.mail.qq.com/detail/0/75
 
 ## 安装后需要做的事
 
@@ -47,6 +48,7 @@ curl -sSL https://raw.githubusercontent.com/QuarterNomad/qqmail-feishu-calendar/
 2. 填写：
    - `QQMAIL_USER`
    - `QQMAIL_AUTH_CODE`
+3. 如需指定非主日历，可额外填写：
    - `LARK_CALENDAR_ID`
 
 ## 手动验证
@@ -85,7 +87,8 @@ python3 ~/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hou
 - 完整配置：
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
-  - `LARK_CALENDAR_ID`
+- 可选配置：
+  - `LARK_CALENDAR_ID`（留空时自动使用当前 Lark 账号的主日历）
 
 ## 入口命令
 

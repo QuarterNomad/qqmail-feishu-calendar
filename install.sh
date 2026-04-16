@@ -76,5 +76,6 @@ fi
 
 printf '\n✅ Install complete.\n\n'
 printf 'Next steps:\n'
-printf '1. Edit %s/%s and fill QQMAIL_USER, QQMAIL_AUTH_CODE, LARK_CALENDAR_ID\n' "$SKILL_PATH" "$CONFIG_FILE"
-printf '2. Verify with: python3 %s/calendar_sync.py --hours 12\n' "$SKILL_PATH"
+printf '1. Edit %s/%s and fill QQMAIL_USER, QQMAIL_AUTH_CODE\n' "$SKILL_PATH" "$CONFIG_FILE"
+printf '2. Optional: set LARK_CALENDAR_ID if you do not want to use the primary Lark calendar\n'
+printf '3. Verify with: python3 %s/calendar_sync.py --hours 12\n' "$SKILL_PATH"

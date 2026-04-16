@@ -9,8 +9,7 @@ from typing import Mapping
 class AppConfig:
     qqmail_user: str
     qqmail_auth_code: str
-    lark_calendar_id: str
-    openclaw_command: str
+    lark_calendar_id: str | None
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -34,8 +33,7 @@ def resolve_config(env_file: Mapping[str, str], process_env: Mapping[str, str]) 
     return AppConfig(
         qqmail_user=pick("QQMAIL_USER"),
         qqmail_auth_code=pick("QQMAIL_AUTH_CODE"),
-        lark_calendar_id=pick("LARK_CALENDAR_ID"),
-        openclaw_command=pick("OPENCLAW_COMMAND") or "openclaw",
+        lark_calendar_id=pick("LARK_CALENDAR_ID") or None,
     )
 
 
@@ -45,7 +43,5 @@ def validate_config(cfg: AppConfig) -> list[str]:
         missing.append("QQMAIL_USER")
     if not cfg.qqmail_auth_code:
         missing.append("QQMAIL_AUTH_CODE")
-    if not cfg.lark_calendar_id:
-        missing.append("LARK_CALENDAR_ID")
     return missing
 

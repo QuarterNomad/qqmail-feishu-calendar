@@ -16,7 +16,13 @@ from qqmail_lark_calendar.config import (
     resolve_config,
     validate_config,
 )
-from qqmail_lark_calendar.lark_cli import LarkCliError, assert_logged_in, create_event, patch_event
+from qqmail_lark_calendar.lark_cli import (
+    LarkCliError,
+    assert_logged_in,
+    create_event,
+    get_default_calendar_id,
+    patch_event,
+)
 from qqmail_lark_calendar.mail_imap import CandidateEmail, search_candidate_emails
 from qqmail_lark_calendar.parse_interview import extract_interview_info
 from qqmail_lark_calendar.state_store import (
@@ -74,6 +80,7 @@ def _load_config_or_exit():
     missing = validate_config(cfg)
     if missing:
         print(f"❌ 配置缺失: {', '.join(missing)}")
+        print("QQ 邮箱 IMAP / 授权码说明: https://service.mail.qq.com/detail/0/75")
         print("请由外部宿主系统提供完整配置后再运行该 skill。")
         sys.exit(2)
     return cfg
@@ -93,6 +100,7 @@ def run_sync(request: SyncRequest) -> SyncResult:
     result = SyncResult(hours=request.hours, started_at=datetime.now())
 
     assert_logged_in()
+    calendar_id = cfg.lark_calendar_id or get_default_calendar_id()
     candidates = search_candidate_emails(cfg.qqmail_user, cfg.qqmail_auth_code, hours=int(request.hours))
     result.candidate_count = len(candidates)
     if not candidates:
@@ -117,7 +125,7 @@ def run_sync(request: SyncRequest) -> SyncResult:
             existing_event_id = event_map.get(info.dedupe_key)
             if existing_event_id:
                 patch_event(
-                    calendar_id=cfg.lark_calendar_id,
+                    calendar_id=calendar_id,
                     event_id=existing_event_id,
                     summary=info.title,
                     start=info.start,
@@ -128,7 +136,7 @@ def run_sync(request: SyncRequest) -> SyncResult:
                 action = "updated"
             else:
                 ev = create_event(
-                    calendar_id=cfg.lark_calendar_id,
+                    calendar_id=calendar_id,
                     summary=info.title,
                     start=info.start,
                     end=info.end,

@@ -24,7 +24,7 @@ python3 calendar_sync.py --help
 ```bash
 python3 calendar_sync.py
 ```
-Expected behavior: exits with code `2` and reports missing `QQMAIL_USER`, `QQMAIL_AUTH_CODE`, and/or `LARK_CALENDAR_ID`.
+Expected behavior: exits with code `2` and reports missing `QQMAIL_USER` and/or `QQMAIL_AUTH_CODE`.
 
 ## Runtime requirements
 
@@ -37,7 +37,8 @@ The runtime expects the host environment to provide:
 - configuration via `config.env` and/or process environment:
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
-  - `LARK_CALENDAR_ID`
+- optional configuration:
+  - `LARK_CALENDAR_ID` (if unset, the runtime should auto-select the current Lark account's primary/default calendar)
 
 `qqmail_lark_calendar/config.py` resolves config with **file values first, then environment variables**. This is important for stable one-shot runs in the host environment.
 
@@ -66,10 +67,10 @@ The flow is:
 ### Module responsibilities
 
 - `calendar_sync.py`: wrapper entrypoint plus reusable one-shot sync orchestration/result summary.
-- `qqmail_lark_calendar/config.py`: reads `config.env`, merges with process environment, validates required keys.
+- `qqmail_lark_calendar/config.py`: reads `config.env`, merges with process environment, validates required keys, and treats `LARK_CALENDAR_ID` as optional.
 - `qqmail_lark_calendar/mail_imap.py`: connects to QQ Mail IMAP, searches recent candidate emails by subject keywords, decodes MIME content, and normalizes each result into `CandidateEmail`.
 - `qqmail_lark_calendar/parse_interview.py`: performs minimal rule-based extraction for date/time ranges and generates a stable dedupe key. If no explicit time range is found, it creates a fallback 30-minute placeholder event based on the email timestamp.
-- `qqmail_lark_calendar/lark_cli.py`: shell adapter around `lark-cli`; checks auth, creates calendar events, and patches existing events.
+- `qqmail_lark_calendar/lark_cli.py`: shell adapter around `lark-cli`; checks auth, auto-discovers the default/primary calendar when needed, creates calendar events, and patches existing events.
 - `qqmail_lark_calendar/state_store.py`: reads/writes the two local JSON state files.
 
 ## State model
