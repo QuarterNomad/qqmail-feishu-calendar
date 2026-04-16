@@ -16,13 +16,13 @@
 ### 方式一：一键安装
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/zhanzhifan/qqmail-feishu-calendar/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/QuarterNomad/qqmail-feishu-calendar/main/install.sh | bash
 ```
 
 ### 方式二：手动安装
 
 ```bash
-git clone https://github.com/zhanzhifan/qqmail-feishu-calendar.git
+git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git
 cd qqmail-feishu-calendar
 ./install.sh
 ```

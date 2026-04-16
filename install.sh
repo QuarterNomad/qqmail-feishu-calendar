@@ -6,7 +6,7 @@ SKILL_NAME="qqmail-lark-calendar"
 SKILL_PATH="$SKILLS_DIR/$SKILL_NAME"
 CONFIG_TEMPLATE="config.env.example"
 CONFIG_FILE="config.env"
-REPO_URL="https://github.com/zhanzhifan/qqmail-feishu-calendar.git"
+REPO_URL="https://github.com/QuarterNomad/qqmail-feishu-calendar.git"
 
 printf '🚀 Installing %s into OpenClaw workspace\n\n' "$SKILL_NAME"
 
