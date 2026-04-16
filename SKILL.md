@@ -35,7 +35,8 @@ The host environment must already provide:
 - complete runtime configuration via `config.env` and/or process environment:
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
-  - `LARK_CALENDAR_ID`
+- optional runtime configuration:
+  - `LARK_CALENDAR_ID` (if omitted, the runtime auto-selects the current Lark account's primary/default calendar)
 
 ## Invocation shape
 
@@ -59,6 +60,12 @@ python3 "{baseDir}/calendar_sync.py" --hours 12
 ```
 
 This command is the canonical local wrapper around the same one-shot execution path. GitHub/OpenClaw installation is handled by `install.sh`; this file only defines when the skill should run and what it should do.
+
+The same wrapper can also be scheduled by an upper-level host as a recurring task. For example, OpenClaw may run it every 6 hours using:
+
+```bash
+python3 /root/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hours 12
+```
 
 ## Expected result summary
 

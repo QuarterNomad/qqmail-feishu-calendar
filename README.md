@@ -59,6 +59,14 @@ python3 ~/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hou
 
 如果配置缺失，脚本会提示缺少哪些变量；如果 Lark 未登录，会直接报鉴权失败。
 
+## 定时任务示例
+
+如果要让 OpenClaw 把这个 skill 配置成定时任务，可以每 6 小时执行一次：
+
+```bash
+python3 /root/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hours 12
+```
+
 ## 适用场景
 
 当用户在 OpenClaw 或其他上层智能体里表达类似意图时，应调用这个 skill：
