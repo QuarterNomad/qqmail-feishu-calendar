@@ -10,6 +10,7 @@ class AppConfig:
     qqmail_user: str
     qqmail_auth_code: str
     lark_calendar_id: str
+    openclaw_command: str
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -34,6 +35,7 @@ def resolve_config(env_file: Mapping[str, str], process_env: Mapping[str, str]) 
         qqmail_user=pick("QQMAIL_USER"),
         qqmail_auth_code=pick("QQMAIL_AUTH_CODE"),
         lark_calendar_id=pick("LARK_CALENDAR_ID"),
+        openclaw_command=pick("OPENCLAW_COMMAND") or "openclaw",
     )
 
 
