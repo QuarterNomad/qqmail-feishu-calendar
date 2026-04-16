@@ -21,19 +21,29 @@ curl -sSL https://raw.githubusercontent.com/QuarterNomad/qqmail-feishu-calendar/
 
 ### 方式二：手动安装
 
+如果你已经手动下载了仓库，也可以直接在仓库根目录执行：
+
 ```bash
-git clone https://github.com/QuarterNomad/qqmail-feishu-calendar.git
-cd qqmail-feishu-calendar
 ./install.sh
 ```
 
-安装脚本会把仓库放到：
+安装脚本会把仓库源码包下载并解压到：
 
 ```bash
 ~/.openclaw/workspace/skills/qqmail-lark-calendar
 ```
 
-如果该目录已经存在 git 仓库，脚本会执行更新；如果缺少 `config.env`，会基于 `config.env.example` 创建模板文件。
+如果该目录已经存在，脚本会用最新源码包刷新 skill 文件，并保留已有 `config.env`；如果缺少 `config.env`，会基于 `config.env.example` 创建模板文件。安装脚本只负责安装 skill 本体并检查前置依赖，不会自动安装 `lark-cli` 或替你完成 Lark 登录。
+
+## 前置依赖
+
+运行这个 skill 前，请先自行安装并配置 `lark-cli`：
+
+```bash
+npm install -g @larksuite/cli
+npx skills add larksuite/cli -y -g
+lark-cli auth login --recommend
+```
 
 ## 安装后需要做的事
 
@@ -42,10 +52,17 @@ cd qqmail-feishu-calendar
    - `QQMAIL_USER`
    - `QQMAIL_AUTH_CODE`
    - `LARK_CALENDAR_ID`
-3. 执行：
+3. 如果还没安装 `lark-cli`，先执行：
 
 ```bash
-lark-cli auth login
+npm install -g @larksuite/cli
+npx skills add larksuite/cli -y -g
+```
+
+4. 执行：
+
+```bash
+lark-cli auth login --recommend
 ```
 
 ## 手动验证
@@ -79,6 +96,8 @@ python3 ~/.openclaw/workspace/skills/qqmail-lark-calendar/calendar_sync.py --hou
 
 - Python 3.8+
 - `lark-cli`
+  - 推荐安装命令：`npm install -g @larksuite/cli`
+  - 额外注册命令：`npx skills add larksuite/cli -y -g`
 - QQ 邮箱 IMAP 可用凭证
 - Lark 登录状态
 - 完整配置：
