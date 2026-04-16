@@ -1,68 +1,77 @@
 ---
 name: qqmail-lark-calendar
-description: 扫描 QQ 邮箱面试通知邮件，提取关键信息并写入 Lark 日历（通过 lark-cli），支持幂等去重与 OpenClaw cron 非交互定时运行。用于“同步/扫描 QQ 邮箱面试通知到 Lark 日历”“定时同步面试邀约”等场景；不用于讲解实现细节或交互式配置引导。
+description: standalone skill/runtime。扫描 QQ 邮箱面试通知邮件，提取关键信息并通过 lark-cli 写入 Lark 日历，支持幂等去重与非交互运行。用于“同步/扫描 QQ 邮箱面试通知到 Lark 日历”等场景；不用于 onboarding、交互式初始化或实现讲解。
 ---
 
 # qqmail-lark-calendar
 
 ## 适用场景（触发词）
-- 用户要求“同步/扫描/检查 QQ 邮箱里的面试通知”“把面试邮件写到 Lark 日历”“定时同步面试邀约”
-- 用户已完成配置，希望**运行一次**或**定时运行**全流程
+- 用户要求“同步/扫描/检查 QQ 邮箱里的面试通知”
+- 用户要求“把面试邮件写到 Lark 日历”
+- 用户希望运行一次该 skill，或把它接入外部调度系统
 
 ## 不适用场景
-- 只讨论原理/结构/代码实现（这类直接回答，不要跑脚本）
-- 需要交互式引导配置（引导属于 onboarding，请让用户按 `README.md` 处理）
-- 用户要求“AI 精准解析正文语义/区分截止时间 vs 面试时间”（本版本只做最低配规则提取与可重复落日历）
+- 需要交互式配置引导
+- 需要安装教学或 onboarding
+- 只讨论原理、结构或代码实现
+- 用户要求 AI 级语义理解、精准区分截止时间与面试时间
 
-## 前置条件（非交互）
-必须满足以下条件，否则 **cron/非交互模式应直接失败退出**：
-- **配置文件**：`{baseDir}/config.env` 存在并包含：
+## 前置条件
+该 skill 只接受非交互运行。外部宿主系统必须提前提供：
+
+- `python3`
+- `lark-cli`
+- 已可用的 QQ 邮箱 IMAP 凭证
+- 已登录的 Lark CLI 会话
+- 完整配置：
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
-  - `LARK_CALENDAR_ID`（写入目标日历；可用 `"primary"` 或实际 `cal_...`，以 README 为准）
-- **可执行文件**：
-  - `python3`
-  - `lark-cli`（`lark-cli auth status` 可执行且已登录，具备日历写入权限）
+  - `LARK_CALENDAR_ID`
 
-## 一次执行（推荐命令）
-### 非交互（cron/无人值守）
-只允许用非交互模式运行（缺配置就失败，不进入向导）：
-
+## 执行命令
 ```bash
-python3 "{baseDir}/calendar_sync.py" --non-interactive --hours 12
+python3 "{baseDir}/calendar_sync.py" --hours 12
 ```
 
-### 交互式（仅首次人工初始化）
-如果是第一次配置，请按 `README.md` 先完成初始化（例如运行 `python3 setup_wizard.py`、`lark-cli auth login`），再回到非交互命令。
-
-## 执行行为（本 skill 约定）
+## 执行行为
 一次运行应完成：
-- 扫描 QQ 邮箱 IMAP（默认近 `--hours` 小时），主题包含：`面试通知`/`面试邀约`/`面试安排`
-- 对新邮件做最低配信息提取（标题、时间窗口/地点（若可提取）、原始链接等）
-- **幂等写入 Lark 日历**：
-  - 事件已存在则更新（event_id 已记录时优先 patch）
-  - 否则创建新事件
-- 更新本地状态文件（都在 `{baseDir}`）：
-  - `.processed_emails.json`：邮件去重
-  - `.processed_events.json`：事件幂等（去重键 → event_id）
+- 扫描 QQ 邮箱 IMAP 中近 `--hours` 小时的候选邮件
+- 对新邮件提取最低配面试信息
+- 幂等写入 Lark 日历：已存在则更新，否则创建
+- 更新状态文件：
+  - `{baseDir}/.processed_emails.json`
+  - `{baseDir}/.processed_events.json`
 
-## 输出与退出码（用于 cron 判定）
-- **退出码 0**：本次运行成功（即使“无新邮件”也算成功）
-- **退出码 2**：配置缺失/不完整（提示用户按 `README.md` 初始化）
-- **退出码 3**：`lark-cli` 不可用或未登录/权限不足
-- **退出码 4**：QQ 邮箱 IMAP 认证失败/连接失败
-- **退出码 5**：写入 Lark 日历失败（创建/更新 API 失败）
+## 输出与退出码
+- **退出码 0**：执行成功（包括“无候选邮件”）
+- **退出码 2**：配置缺失或不完整
+- **退出码 3**：Lark CLI 不可用、未登录或权限不足
+- **退出码 4**：QQ 邮箱 IMAP 失败
+- **退出码 5**：写入 Lark 日历失败
 - **退出码 1**：其他未分类异常
 
-成功输出需包含：
-- 扫描窗口（hours）、候选邮件数、新邮件数
-- 创建/更新事件数量、跳过数量
+成功输出应包含：
+- 扫描窗口
+- 候选邮件数
+- 创建事件数
+- 更新事件数
+- 失败数
 
-失败输出需包含：
-- 失败阶段（config / imap / parse / lark）
-- 关键错误信息原样保留（便于定位）
+失败输出应包含：
+- 失败阶段
+- 关键错误信息
 
-## 相关文件（只做指引，不在此展开 onboarding）
-- `{baseDir}/calendar_sync.py`：入口脚本（非交互 cron 运行用）
-- `{baseDir}/setup_wizard.py`：交互式初始化（仅人工）
-- `{baseDir}/README.md`：安装/配置/cron 创建/排错
+## 输出边界
+本 skill 当前不会：
+- 提供交互式初始化
+- 自动生成配置文件
+- 提供安装/登录教学
+- 做 AI 级正文语义解析
+
+## 相关文件
+- `{baseDir}/calendar_sync.py`
+- `{baseDir}/qqmail_lark_calendar/config.py`
+- `{baseDir}/qqmail_lark_calendar/mail_imap.py`
+- `{baseDir}/qqmail_lark_calendar/parse_interview.py`
+- `{baseDir}/qqmail_lark_calendar/lark_cli.py`
+- `{baseDir}/qqmail_lark_calendar/state_store.py`

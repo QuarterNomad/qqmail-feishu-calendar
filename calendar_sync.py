@@ -2,8 +2,6 @@
 """
 QQ Mail → Lark Calendar 同步脚本（AI 判断版）
 代码粗筛 → AI 精判
-
-首次运行或配置不完整时，自动进入引导流程。
 """
 
 import sys
@@ -37,30 +35,18 @@ EVENT_STATE_FILE = SKILL_DIR / '.processed_events.json'
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="QQ Mail → Lark Calendar sync")
     p.add_argument("--hours", type=int, default=12, help="扫描窗口（小时）")
-    p.add_argument(
-        "--non-interactive",
-        action="store_true",
-        help="非交互模式：配置缺失/未登录直接失败退出，不进入 setup_wizard",
-    )
     return p.parse_args(argv)
 
 
-def _ensure_config(non_interactive: bool) -> None:
+def _load_config_or_exit():
     env_file = load_env_file(CONFIG_FILE)
     cfg = resolve_config(env_file, os.environ)
     missing = validate_config(cfg)
-    if not missing:
-        return
-
-    if non_interactive:
+    if missing:
         print(f"❌ 配置缺失: {', '.join(missing)}")
-        print("请按 README.md 完成初始化（或运行 python3 setup_wizard.py），再用 --non-interactive 运行。")
+        print("请由外部宿主系统提供完整配置后再运行该 skill。")
         sys.exit(2)
-
-    print("\n⚠️  检测到配置不完整，进入引导流程...\n")
-    import setup_wizard
-
-    setup_wizard.run_wizard()
+    return cfg
 
 
 def _parse_email_time_fallback(e: CandidateEmail) -> datetime:
@@ -75,18 +61,8 @@ def _parse_email_time_fallback(e: CandidateEmail) -> datetime:
 
 def main(argv: list[str]) -> int:
     args = _parse_args(argv)
+    cfg = _load_config_or_exit()
 
-    _ensure_config(non_interactive=bool(args.non_interactive))
-
-    env_file = load_env_file(CONFIG_FILE)
-    cfg = resolve_config(env_file, os.environ)
-    missing = validate_config(cfg)
-    if missing:
-        # interactive 模式下也可能没完成
-        print(f"❌ 配置缺失: {', '.join(missing)}")
-        return 2
-
-    # 非交互/写日历模式下，必须确保已登录
     try:
         assert_logged_in()
     except LarkCliError as e:
