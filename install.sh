@@ -71,16 +71,10 @@ fi
 
 if ! command -v lark-cli >/dev/null 2>&1; then
   printf '⚠️  Missing prerequisite: lark-cli\n'
-  printf '   Install it with the official commands before running the skill:\n'
-  printf '   npm install -g @larksuite/cli\n'
-  printf '   npx skills add larksuite/cli -y -g\n'
+  printf '   See: https://github.com/larksuite/cli\n'
 fi
 
 printf '\n✅ Install complete.\n\n'
 printf 'Next steps:\n'
-printf '1. If lark-cli is missing, install it first:\n'
-printf '   npm install -g @larksuite/cli\n'
-printf '   npx skills add larksuite/cli -y -g\n'
-printf '2. Edit %s/%s and fill QQMAIL_USER, QQMAIL_AUTH_CODE, LARK_CALENDAR_ID\n' "$SKILL_PATH" "$CONFIG_FILE"
-printf '3. Run: lark-cli auth login --recommend\n'
-printf '4. Verify with: python3 %s/calendar_sync.py --hours 12\n' "$SKILL_PATH"
+printf '1. Edit %s/%s and fill QQMAIL_USER, QQMAIL_AUTH_CODE, LARK_CALENDAR_ID\n' "$SKILL_PATH" "$CONFIG_FILE"
+printf '2. Verify with: python3 %s/calendar_sync.py --hours 12\n' "$SKILL_PATH"
