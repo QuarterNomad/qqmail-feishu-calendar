@@ -1,2 +1,2 @@
-"""qqmail-feishu-calendar core package."""
+"""qqmail-lark-calendar core package."""
 

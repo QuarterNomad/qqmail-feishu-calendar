@@ -1,6 +1,6 @@
-# qqmail-feishu-calendar
+# qqmail-lark-calendar
 
-扫描 QQ 邮箱面试通知类邮件，提取最低配关键信息，并通过 `lark-cli` 写入飞书日历（支持幂等去重与定时运行）。
+扫描 QQ 邮箱面试通知类邮件，提取最低配关键信息，并通过 `lark-cli` 写入 Lark 日历（支持幂等去重与定时运行）。
 
 ## 当前能力
 
@@ -9,7 +9,7 @@
   - `面试邀约`
   - `面试安排`
 - 提取最低配面试信息（优先从正文匹配“日期 + 起止时间”，匹配不到则创建“待确认时间”的占位事件）
-- 创建/更新飞书日历事件（通过 `lark-cli`）
+- 创建/更新 Lark 日历事件（通过 `lark-cli`）
 - 幂等去重：
   - `.processed_emails.json`：按邮件标题去重，避免重复处理
   - `.processed_events.json`：按去重键记录 `event_id`，重复运行优先更新事件
@@ -22,7 +22,7 @@
 - 区分面试时间与截止时间
 - 基于“公司 + 时间”的事件级查重
 
-如果后续要支持这些能力，需要继续扩展 `qqmail_feishu_calendar/parse_interview.py` 与去重策略。
+如果后续要支持这些能力，需要继续扩展 `qqmail_lark_calendar/parse_interview.py` 与去重策略。
 
 ## 运行环境
 
@@ -47,7 +47,7 @@ npm install -g @larksuite/cli
 5. 按提示完成短信验证
 6. 获取授权码（形如 `xxxx xxxx xxxx`）
 
-### 2. 登录飞书（可选但脚本会检查状态）
+### 2. 登录 Lark（脚本会检查状态）
 
 ```bash
 lark-cli auth login --recommend
@@ -61,7 +61,7 @@ lark-cli auth status
 ```env
 QQMAIL_USER=<你的QQ邮箱>
 QQMAIL_AUTH_CODE=<IMAP授权码>
-FEISHU_CALENDAR_ID=primary
+LARK_CALENDAR_ID=primary
 ```
 
 也可以从模板复制：
@@ -71,7 +71,7 @@ cp config.env.example config.env
 ```
 
 ### 4. 选择写入哪个日历（calendar_id）
-本项目使用 `FEISHU_CALENDAR_ID` 作为写入目标：
+本项目使用 `LARK_CALENDAR_ID` 作为写入目标：
 - **推荐先用**：`primary`
 - 如果你要写入指定日历：用 `lark-cli calendar calendars list --format json` 查出日历列表并选择对应 `calendar_id`，把它写进 `config.env`
 
@@ -97,7 +97,7 @@ python3 calendar_sync.py --non-interactive --hours 12
 2. 校验 `lark-cli auth status` 已登录（未登录则退出）
 3. 连接 QQ 邮箱 IMAP
 4. 搜索近 `--hours` 小时的候选邮件
-5. 对新邮件创建/更新飞书日历事件
+5. 对新邮件创建/更新 Lark 日历事件
 6. 更新 `.processed_emails.json` 与 `.processed_events.json`
 
 ### 定时运行示例
@@ -108,20 +108,20 @@ python3 calendar_sync.py --non-interactive --hours 12
 每 6 小时执行一次：
 
 ```bash
-0 */6 * * * cd /path/to/qqmail-feishu-calendar && python3 calendar_sync.py
+0 */6 * * * cd /path/to/qqmail-lark-calendar && python3 calendar_sync.py
 ```
 
 #### B. OpenClaw Cron（推荐）
-前提：你把仓库放进 OpenClaw workspace 的 `./skills/qqmail-feishu-calendar/`，并确保 `config.env` 与 `lark-cli` 登录状态在网关主机上可用。
+前提：你把仓库放进 OpenClaw workspace 的 `./skills/qqmail-lark-calendar/`，并确保 `config.env` 与 `lark-cli` 登录状态在网关主机上可用。
 
 示例（每 6 小时跑一次；注意 `--to` 需要替换为你的投递目标）：
 
 ```bash
 openclaw cron add \
-  --name "qqmail-feishu-calendar-sync" \
+  --name "qqmail-lark-calendar-sync" \
   --every "6h" \
   --session isolated \
-  --message "同步 QQ 邮箱面试通知到飞书日历（非交互）" \
+  --message "同步 QQ 邮箱面试通知到 Lark 日历（非交互）" \
   --announce \
   --to "chat:YOUR_CHAT_ID"
 ```
@@ -134,9 +134,9 @@ openclaw cron add \
 ## 项目结构
 
 ```text
-qqmail-feishu-calendar/
+qqmail-lark-calendar/
 ├── calendar_sync.py        # 入口脚本：参数解析 + 调度（cron 运行用）
-├── qqmail_feishu_calendar/ # 核心逻辑包（IMAP/解析/状态/飞书写入）
+├── qqmail_lark_calendar/   # 核心逻辑包（IMAP/解析/状态/Lark 写入）
 ├── setup_wizard.py         # 交互式配置引导
 ├── config_validator.py     # 配置与连通性检查
 ├── config.env.example      # 配置模板

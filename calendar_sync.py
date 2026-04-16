@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-QQ Mail → Feishu Calendar 同步脚本（AI 判断版）
+QQ Mail → Lark Calendar 同步脚本（AI 判断版）
 代码粗筛 → AI 精判
 
 首次运行或配置不完整时，自动进入引导流程。
@@ -12,15 +12,15 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from qqmail_feishu_calendar.config import (
+from qqmail_lark_calendar.config import (
     load_env_file,
     resolve_config,
     validate_config,
 )
-from qqmail_feishu_calendar.feishu_larkcli import LarkCliError, assert_logged_in, create_event, patch_event
-from qqmail_feishu_calendar.mail_imap import CandidateEmail, search_candidate_emails
-from qqmail_feishu_calendar.parse_interview import extract_interview_info
-from qqmail_feishu_calendar.state_store import (
+from qqmail_lark_calendar.lark_cli import LarkCliError, assert_logged_in, create_event, patch_event
+from qqmail_lark_calendar.mail_imap import CandidateEmail, search_candidate_emails
+from qqmail_lark_calendar.parse_interview import extract_interview_info
+from qqmail_lark_calendar.state_store import (
     ProcessedStatePaths,
     load_event_map,
     load_processed_email_subjects,
@@ -35,7 +35,7 @@ STATE_FILE = SKILL_DIR / '.processed_emails.json'
 EVENT_STATE_FILE = SKILL_DIR / '.processed_events.json'
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="QQ Mail → Feishu Calendar sync")
+    p = argparse.ArgumentParser(description="QQ Mail → Lark Calendar sync")
     p.add_argument("--hours", type=int, default=12, help="扫描窗口（小时）")
     p.add_argument(
         "--non-interactive",
@@ -90,7 +90,7 @@ def main(argv: list[str]) -> int:
     try:
         assert_logged_in()
     except LarkCliError as e:
-        print(f"❌ 飞书鉴权失败: {e}")
+        print(f"❌ Lark 鉴权失败: {e}")
         return 3
 
     started_at = datetime.now()
@@ -140,7 +140,7 @@ def main(argv: list[str]) -> int:
             existing_event_id = event_map.get(info.dedupe_key)
             if existing_event_id:
                 patch_event(
-                    calendar_id=cfg.feishu_calendar_id,
+                    calendar_id=cfg.lark_calendar_id,
                     event_id=existing_event_id,
                     summary=info.title,
                     start=info.start,
@@ -150,7 +150,7 @@ def main(argv: list[str]) -> int:
                 updated += 1
             else:
                 ev = create_event(
-                    calendar_id=cfg.feishu_calendar_id,
+                    calendar_id=cfg.lark_calendar_id,
                     summary=info.title,
                     start=info.start,
                     end=info.end,
@@ -160,7 +160,7 @@ def main(argv: list[str]) -> int:
                 created += 1
         except LarkCliError as ex:
             failed += 1
-            print(f"\n  ❌ 写入飞书日历失败: {ex}")
+            print(f"\n  ❌ 写入 Lark 日历失败: {ex}")
             continue
 
         print(f"\n  [{e.date_display}] {e.subject}")

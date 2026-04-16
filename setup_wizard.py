@@ -11,7 +11,7 @@ from pathlib import Path
 
 from config_validator import (
     validate_qqmail_imap,
-    validate_feishu_auth,
+    validate_lark_auth,
     check_config_complete,
 )
 
@@ -67,7 +67,7 @@ def write_config_field(field: str, value: str, config_path: Path = DEFAULT_CONFI
 
 
 def run_wizard():
-    print("\n" + "🧙  QQ邮箱 → 飞书日历 配置引导")
+    print("\n" + "🧙  QQ邮箱 → Lark 日历 配置引导")
     print("    按提示逐步完成配置，按 Ctrl+C 可随时退出\n")
 
     total_steps = 3
@@ -129,16 +129,16 @@ def run_wizard():
             print_err("请重新获取授权码后再次运行 setup_wizard.py")
             sys.exit(1)
 
-    # Step 3: 飞书授权（必填，每步验证）
-    print_step(3, total_steps, "配置飞书日历授权")
+    # Step 3: Lark 授权（必填，每步验证）
+    print_step(3, total_steps, "配置 Lark 日历授权")
 
     while True:
-        auth_ok, auth_msg = validate_feishu_auth()
+        auth_ok, auth_msg = validate_lark_auth()
         if auth_ok:
-            print_ok("飞书授权正常")
+            print_ok("Lark 授权正常")
             break
         else:
-            print_err(f"飞书授权异常: {auth_msg}")
+            print_err(f"Lark 授权异常: {auth_msg}")
             print_info("请在另一个终端运行以下命令完成授权：")
             print("    lark-cli auth login")
             print_info("授权完成后回到本界面按回车继续验证...")

@@ -12,7 +12,7 @@ class LarkCliError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class FeishuEvent:
+class LarkEvent:
     event_id: str
 
 
@@ -33,7 +33,7 @@ def _run(cmd: list[str]) -> str:
 def assert_logged_in() -> None:
     out = _run(["lark-cli", "auth", "status"])
     if "not logged in" in out.lower() or "未登录" in out:
-        raise LarkCliError("飞书未登录，请先运行 `lark-cli auth login --recommend`")
+        raise LarkCliError("Lark 未登录，请先运行 `lark-cli auth login --recommend`")
 
 
 def _parse_json_maybe(text: str) -> Any | None:
@@ -78,7 +78,7 @@ def create_event(
     start: datetime,
     end: datetime,
     description: str,
-) -> FeishuEvent:
+) -> LarkEvent:
     # 用快捷命令创建；优先让 CLI 输出 json（若 CLI 不支持，也能从输出里解析）
     cmd = [
         "lark-cli",
@@ -103,7 +103,7 @@ def create_event(
     if not event_id:
         # 兜底：输出可能是 pretty 格式或包含提示语
         raise LarkCliError(f"创建日历事件成功但无法解析 event_id，原始输出:\n{out[:800]}")
-    return FeishuEvent(event_id=event_id)
+    return LarkEvent(event_id=event_id)
 
 
 def patch_event(

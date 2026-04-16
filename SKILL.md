@@ -1,12 +1,12 @@
 ---
-name: qqmail-feishu-calendar
-description: 扫描 QQ 邮箱面试通知邮件，提取关键信息并写入飞书日历（通过 lark-cli），支持幂等去重与 OpenClaw cron 非交互定时运行。用于“同步/扫描 QQ 邮箱面试通知到飞书日历”“定时同步面试邀约”等场景；不用于讲解实现细节或交互式配置引导。
+name: qqmail-lark-calendar
+description: 扫描 QQ 邮箱面试通知邮件，提取关键信息并写入 Lark 日历（通过 lark-cli），支持幂等去重与 OpenClaw cron 非交互定时运行。用于“同步/扫描 QQ 邮箱面试通知到 Lark 日历”“定时同步面试邀约”等场景；不用于讲解实现细节或交互式配置引导。
 ---
 
-# qqmail-feishu-calendar
+# qqmail-lark-calendar
 
 ## 适用场景（触发词）
-- 用户要求“同步/扫描/检查 QQ 邮箱里的面试通知”“把面试邮件写到飞书日历”“定时同步面试邀约”
+- 用户要求“同步/扫描/检查 QQ 邮箱里的面试通知”“把面试邮件写到 Lark 日历”“定时同步面试邀约”
 - 用户已完成配置，希望**运行一次**或**定时运行**全流程
 
 ## 不适用场景
@@ -19,7 +19,7 @@ description: 扫描 QQ 邮箱面试通知邮件，提取关键信息并写入飞
 - **配置文件**：`{baseDir}/config.env` 存在并包含：
   - `QQMAIL_USER`
   - `QQMAIL_AUTH_CODE`
-  - `FEISHU_CALENDAR_ID`（写入目标日历；可用 `"primary"` 或实际 `cal_...`，以 README 为准）
+  - `LARK_CALENDAR_ID`（写入目标日历；可用 `"primary"` 或实际 `cal_...`，以 README 为准）
 - **可执行文件**：
   - `python3`
   - `lark-cli`（`lark-cli auth status` 可执行且已登录，具备日历写入权限）
@@ -39,7 +39,7 @@ python3 "{baseDir}/calendar_sync.py" --non-interactive --hours 12
 一次运行应完成：
 - 扫描 QQ 邮箱 IMAP（默认近 `--hours` 小时），主题包含：`面试通知`/`面试邀约`/`面试安排`
 - 对新邮件做最低配信息提取（标题、时间窗口/地点（若可提取）、原始链接等）
-- **幂等写入飞书日历**：
+- **幂等写入 Lark 日历**：
   - 事件已存在则更新（event_id 已记录时优先 patch）
   - 否则创建新事件
 - 更新本地状态文件（都在 `{baseDir}`）：
@@ -51,7 +51,7 @@ python3 "{baseDir}/calendar_sync.py" --non-interactive --hours 12
 - **退出码 2**：配置缺失/不完整（提示用户按 `README.md` 初始化）
 - **退出码 3**：`lark-cli` 不可用或未登录/权限不足
 - **退出码 4**：QQ 邮箱 IMAP 认证失败/连接失败
-- **退出码 5**：写入飞书日历失败（创建/更新 API 失败）
+- **退出码 5**：写入 Lark 日历失败（创建/更新 API 失败）
 - **退出码 1**：其他未分类异常
 
 成功输出需包含：
@@ -59,7 +59,7 @@ python3 "{baseDir}/calendar_sync.py" --non-interactive --hours 12
 - 创建/更新事件数量、跳过数量
 
 失败输出需包含：
-- 失败阶段（config / imap / parse / feishu）
+- 失败阶段（config / imap / parse / lark）
 - 关键错误信息原样保留（便于定位）
 
 ## 相关文件（只做指引，不在此展开 onboarding）

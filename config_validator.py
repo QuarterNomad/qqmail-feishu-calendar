@@ -37,9 +37,9 @@ def validate_qqmail_imap(email: str, auth_code: str) -> tuple[bool, str]:
         return False, f"连接异常: {str(e)}"
 
 
-def validate_feishu_auth() -> tuple[bool, str]:
+def validate_lark_auth() -> tuple[bool, str]:
     """
-    验证飞书授权状态
+    验证 Lark 授权状态（通过 lark-cli）
     Returns: (success, message)
     """
     try:
@@ -52,9 +52,9 @@ def validate_feishu_auth() -> tuple[bool, str]:
         output = result.stdout + result.stderr
 
         if result.returncode == 0 and ("logged in" in output.lower() or "已登录" in output):
-            return True, "飞书授权正常"
+            return True, "Lark 授权正常"
         elif "not logged in" in output.lower() or "未登录" in output:
-            return False, "飞书未登录，请先运行 lark-cli auth login"
+            return False, "Lark 未登录，请先运行 lark-cli auth login"
         else:
             return False, f"授权状态未知: {output[:200]}"
     except FileNotFoundError:
@@ -62,7 +62,7 @@ def validate_feishu_auth() -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return False, "lark-cli auth status 执行超时"
     except Exception as e:
-        return False, f"检查飞书授权时异常: {str(e)}"
+        return False, f"检查 Lark 授权时异常: {str(e)}"
 
 
 def check_config_complete(config_path: str = "config.env") -> tuple[bool, dict]:
@@ -72,7 +72,7 @@ def check_config_complete(config_path: str = "config.env") -> tuple[bool, dict]:
     fields_dict: {field_name: (filled, value)}
     """
     required_fields = ["QQMAIL_USER", "QQMAIL_AUTH_CODE"]
-    optional_fields = ["FEISHU_APP_ID", "FEISHU_APP_SECRET"]
+    optional_fields = ["LARK_APP_ID", "LARK_APP_SECRET"]
 
     fields = {}
     all_required_filled = True
