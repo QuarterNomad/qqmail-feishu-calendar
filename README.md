@@ -1,5 +1,10 @@
 # qqmail-lark-calendar
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![linuxdo](https://img.shields.io/badge/linuxdo-skill-blue?style=flat)](https://linux.do)
+
+**Conversational one-shot skill that scans QQ Mail interview-notification emails and creates or updates Lark calendar events via `lark-cli`.**
+
 这是一个面向 OpenClaw / agent 调用的一次性执行 skill 仓库，也已经补齐了从 GitHub 分发到 OpenClaw workspace 的基础包装层。
 
 它负责：
@@ -10,6 +15,34 @@
 - 在日历描述中补充对应 QQ 邮件链接
 
 这个仓库不负责托管凭证、自动登录 Lark 或交互式 onboarding；这些前置条件仍需由 OpenClaw 宿主环境或最终用户自行提供。
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 📧 QQ Mail 扫描 | 扫描 QQ 邮箱中的面试通知类邮件（面试通知、面试邀约、面试安排） |
+| 📅 Lark 日历同步 | 通过 `lark-cli` 创建或更新 Lark 日历事件 |
+| 🔄 增量同步 | 基于邮件主题的去重，支持重复调用 |
+| 🔗 邮件链接 | 在日历事件描述中补充对应 QQ 邮件链接 |
+| ⏰ 定时执行 | 支持通过 cron 或 OpenClaw 定时任务定期执行 |
+
+## Architecture
+
+```
+OpenClaw / Agent
+    │
+    ▼
+calendar_sync.py (CLI wrapper + one-shot orchestration)
+    │
+    ├── config.py (configuration loading)
+    ├── mail_imap.py (QQ Mail IMAP access)
+    ├── parse_interview.py (rule-based extraction + dedupe key)
+    ├── lark_cli.py (lark-cli shell adapter)
+    └── state_store.py (local JSON state)
+            │
+            ▼
+        Lark Calendar (via lark-cli)
+```
 
 ## 安装到 OpenClaw
 
@@ -41,6 +74,14 @@ curl -sSL https://raw.githubusercontent.com/QuarterNomad/qqmail-feishu-calendar/
 
 - 飞书 / Lark CLI：https://github.com/larksuite/cli
 - QQ 邮箱 IMAP / 授权码说明：https://service.mail.qq.com/detail/0/75
+
+## Configuration (via config.env)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `QQMAIL_USER` | Yes | - | QQ 邮箱地址 |
+| `QQMAIL_AUTH_CODE` | Yes | - | QQ 邮箱 IMAP 授权码 |
+| `LARK_CALENDAR_ID` | No | primary calendar | 指定 Lark 日历 ID，留空则使用主日历 |
 
 ## 安装后需要做的事
 
@@ -132,3 +173,7 @@ qqmail-lark-calendar/
 - 自动完成 `lark-cli` 登录
 - AI 语义理解级时间解析
 - 完整的 onboarding 教学流程
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
