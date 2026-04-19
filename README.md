@@ -177,3 +177,7 @@ qqmail-lark-calendar/
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+本项目支持 [LINUX DO](https://linux.do) 社区
